@@ -1,0 +1,57 @@
+---
+# Backup network device configs
+
+- name: Ensure backup folder exists for each DC
+  hosts: all
+  tags: dir
+
+  tasks:
+    - name: TASK 1 - Create each folder
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - backups/ny
+        - backups/nj
+      delegate_to: localhost
+      run_once: true
+
+
+- name: Backup Nexus switches
+  hosts: all_nexus_switches
+  connection: network_cli
+  tags: nxos
+
+  tasks:
+  - include_role:
+      name: roles/backup-nxos
+
+
+- name: Backup IOS routers and switches
+  hosts: all_ios_devices
+  connection: network_cli
+  tags: ios
+
+  tasks:
+  - include_role:
+      name: roles/backup-ios
+
+
+- name: Backup ASA firewalls
+  hosts: all_asa_firewalls
+  connection: network_cli
+  tags: asa
+
+  tasks:
+  - include_role:
+      name: roles/backup-asa
+
+
+- name: Push backups to Git if there are changes
+  hosts: all
+  connection: network_cli
+  tags: git
+
+  tasks:
+  - include_role:
+      name: roles/push-config-backups

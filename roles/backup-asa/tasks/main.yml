@@ -1,0 +1,8 @@
+---
+- name: Task 1 of 1 - Copy run start and save running config to ansible server
+  asa_config:
+    save: yes
+    backup: yes
+    backup_options:
+      dir_path: "{{ backup_dir }}"
+      filename: "{{ inventory_hostname }}.cfg"

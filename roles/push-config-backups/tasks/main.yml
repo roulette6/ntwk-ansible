@@ -1,0 +1,25 @@
+---
+- name: Task 1 of 3 - Get current date and time
+  command: date +"%F %T %Z"
+  register: date
+  delegate_to: localhost
+  run_once: yes
+
+- name: Task 2 of 3 - Check directory status
+  command: git status backups/*
+  register: git_status
+  changed_when: false
+  delegate_to: localhost
+  run_once: yes
+
+- name: Task 3 of 3 - Commmit changes to Git
+  shell: |
+    git pull
+    git add backups/*
+    git commit -m "Committing changes to running configs on {{ date.stdout }}"
+    git push origin master
+    git push bucket master
+  when:
+    - not("nothing to commit" in git_status.stdout)
+  delegate_to: localhost
+  run_once: yes

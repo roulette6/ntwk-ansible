@@ -1,0 +1,33 @@
+---
+# Config SSH params on ASA
+# Run via: ansible-playbook playbook_asa_conf_ssh.yml --extra-vars="hosts=hosts" --vault-id prod@vault_key
+
+- name: Modify SSH timeout on ASA firewalls
+  hosts: "{{ hosts }}"
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: "Task 1: get baseline config"
+      asa_command:
+        commands: show run ssh timeout
+      register: precheck
+      tags: precheck
+
+    - name: "Task 2: output baseline config to screen"
+      debug: var=precheck.stdout
+      tags: precheck
+
+    - name: "Task 3: confgure SSH timeout"
+      asa_config:
+        lines:
+          - ssh timeout 15
+        save: yes
+
+    - name: "Task 4: verify change"
+      asa_command:
+        commands: show run ssh timeout
+      register: verification
+
+    - name: "Task 5: output verification to screen"
+      debug: var=verification.stdout

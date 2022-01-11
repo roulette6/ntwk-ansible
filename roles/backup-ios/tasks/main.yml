@@ -1,0 +1,12 @@
+---
+- name: Task 1 of 2 - Get the running-config
+  ios_command:
+    commands:
+      - term len 0
+      - show running-config | exclude ^ntp.clock-period|Last.configuration.change|NVRAM.config.last.updated|Current.configuration.*bytes
+  register: cli_results
+
+- name: Task 2 of 2 - Save the running config to ansible server
+  copy:
+    content: "{{ cli_results.stdout[1] }}"
+    dest: "{{ backup_dir }}/{{ inventory_hostname }}.cfg"

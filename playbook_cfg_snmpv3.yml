@@ -1,0 +1,96 @@
+---
+# Configure SNMPv3
+# Test via: ansible-playbook -i inventory_dev.yml playbook_cfg_snmpv3.yml --vault-id prod@vault_key --tags precheck
+# Run via: ansible-playbook -i inventory_dev.yml playbook_cfg_snmpv3.yml --vault-id prod@vault_key
+
+- name: IOS SNMP configs
+  hosts:
+    nj-wan-rt03.example.com
+    nj-bdr-rt01.example.com
+    nj-wan-rt01.example.com
+    nj-wan-rt02.example.com
+    nj-bdr-rt02.example.com
+    nj-acc-sw02.example.com
+    nj-acc-sw03.example.com
+    nj-cha-sw04.example.com
+    nj-cha-sw08.example.com
+    nj-cha-sw07.example.com
+    nj-cha-sw02.example.com
+    nj-cha-sw01.example.com
+    nj-cha-sw03.example.com
+  gather_facts: no
+  connection: network_cli
+  vars:
+    s1: "\n----\n"
+    s2: "\n----\n\n"
+    c1: "show run | i snmp-server"
+    c2: "show snmp user"
+    c3: "show access-list SNMP_RO"
+
+  tasks:
+    - name: "Task 1: create backup folder"
+      file:
+        path: "backups/snmp/nj"
+        state: directory
+      delegate_to: localhost
+      run_once: true
+      tags: precheck
+
+    - name: "Task 2: verify baseline configs"
+      ios_command:
+        commands:
+          - "{{ c1 }}"
+          - "{{ c2 }}"
+          - "{{ c3 }}"
+      register: output
+      tags: precheck
+
+    - name: "Task 3: save baseline configs to backups/snmp/nj/"
+      copy:
+        content: "!-- {{ inventory_hostname }}\n\n{{ c1 }}{{ s1 }}{{ output.stdout[0] }}{{ s2 }}{{ c2 }}{{ s1 }}{{ output.stdout[1] }}{{ s2 }}{{ c3 }}{{ s1 }}{{ output.stdout[2] }}{{ s2 }}"
+        dest: "backups/snmp/nj/ios_precheck_{{ inventory_hostname }}.txt"
+      tags: precheck
+
+    - name: "Task 4: configure SNMPv3 with SHA and AES 128"
+      ios_config:
+        lines:
+          - no snmp-server group solar v3 auth
+          - no snmp-server group solar v3 priv
+          - no snmp-server group solar
+          - snmp-server group SERENOVA v3 priv access SNMP_RO
+          - snmp-server user gnostic SERENOVA v3 auth sha i2Pkw158Mjjq priv aes 128 i2Pkw158Mjjq access SNMP_RO
+        save_when: changed
+        tags: implementation
+
+- name: ASA SNMP configs
+  hosts: nj-tel-fw02.example.com
+  gather_facts: no
+  connection: network_cli
+  vars:
+    s1: "\n----\n"
+    s2: "\n----\n\n"
+    c1: "show run snmp-server"
+    c2: "show snmp user"
+
+  tasks:
+    - name: "Task 1: verify baseline configs"
+      asa_command:
+        commands:
+          - "{{ c1 }}"
+          - "{{ c2 }}"
+      register: output
+      tags: precheck
+
+    - name: "Task 2: Save baseline configs to backups/snmp/nj/"
+      copy:
+        content: "!-- {{ inventory_hostname }}\n\n{{ c1 }}{{ s1 }}{{ output.stdout[0] }}{{ s2 }}{{ c2 }}{{ s1 }}{{ output.stdout[1] }}{{ s2 }}"
+        dest: "backups/snmp/nj/asa_precheck_{{ inventory_hostname }}.txt"
+      tags: precheck
+
+    - name: "Task 3: Configure ASA"
+      asa_config:
+        lines:
+          - no snmp-server group NY1DC v3 priv
+          - snmp-server host inside 192.168.20.135 version 3 gnostic
+        save: yes
+      tags: implementation

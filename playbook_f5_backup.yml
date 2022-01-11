@@ -1,0 +1,43 @@
+# Backup network device configs
+# Must pass date as extra var
+---
+
+- name: Ensure backup folder exists for F5 backups
+  hosts: all_load_balancers
+
+  tasks:
+    - name: TASK 1 - Create backups/f5_backups folder
+      file:
+        path: "backups/f5_backups"
+        state: directory
+      delegate_to: localhost
+      run_once: true
+      tags: dir
+
+- hosts: all_load_balancers
+  gather_facts: no
+
+  tasks:
+    - name: Delete previous Ansible ucs backup on F5 if it exists
+      bigip_ucs:
+        ucs: ansible_cfg_backup.ucs
+        state: absent
+        provider:
+          server: "{{ inventory_hostname }}"
+          user: "{{ ansible_user }}"
+          password: "{{ ansible_password }}"
+          validate_certs: no
+      delegate_to: localhost
+      tags: delete
+
+    - name: Create and download ucs file from f5 load balancers
+      bigip_ucs_fetch:
+        src: ansible_cfg_backup.ucs
+        dest: backups/f5_backups/{{ inventory_hostname }}_ansible_cfg_backup_{{ date }}.ucs
+        provider:
+          server: "{{ inventory_hostname }}"
+          user: "{{ ansible_user }}"
+          password: "{{ ansible_password }}"
+          validate_certs: no
+      delegate_to: localhost
+      tags: download

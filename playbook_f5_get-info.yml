@@ -1,0 +1,21 @@
+# ansible-playbook playbook_f5_node.yml --vault-id prod@vault_key
+---
+
+- name: Check node info
+  hosts: nj-web-lb02.example.com
+
+  tasks:
+    - name: Collect BIG-IP information
+      bigip_device_info:
+        gather_subset:
+          - nodes
+        provider:
+          server: nj-web-lb02.example.com
+          user: "{{ ansible_user }}"
+          password: "{{ ansible_password }}"
+          validate_certs: no
+      delegate_to: localhost
+      register: cli_result
+
+    - name: Spit out that stuff
+      debug: var=cli_result

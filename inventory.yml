@@ -1,0 +1,87 @@
+---
+all:
+  children:
+    ny_dc:
+      children:
+        ny_ios_routers:
+          hosts:
+            ny-wan-rt01.example.com:
+            ny-bdr-rt01.example.com:
+            ny-tel-rt01:
+              ansible_host: 192.168.10.25
+        ny_ios_switches:
+          hosts:
+            ny-bdr-sw01.example.com:
+            ny-bdr-sw02.example.com:
+            ny-cha-sw01.example.com:
+            ny-cha-sw02.example.com:
+        ny_nexus_switches:
+          hosts:
+            ny-cor-sw01.example.com:
+            ny-cor-sw02.example.com:
+        ny_asa_firewalls:
+          hosts:
+            ny-tel-fw01.example.com:
+            ny-cor-fw01.example.com:
+              become: no
+        ny_load_balancers:
+          hosts:
+            ny-web-lb01.example.com:
+            ny-web-lb02.example.com:
+
+    nj_dc:
+      children:
+        nj_ios_routers:
+          hosts:
+            nj-wan-rt01.example.com:
+            nj-bdr-rt01.example.com:
+        nj_ios_switches:
+          hosts:
+            nj-bdr-sw01.example.com:
+        nj_nexus_switches:
+          hosts:
+            nj-cor-sw01.example.com:
+            nj-cor-sw02.example.com:
+        nj_asa_firewalls:
+          hosts:
+            nj-cor-fw01.example.com:
+              ansible_host: 192.168.20.1
+              become: no
+            nj-tel-fw01.example.com:
+              ansible_host: 192.168.20.21
+        nj_load_balancers:
+          hosts:
+            nj-web-lb01.example.com:
+            nj-web-lb02.example.com:
+
+    all_dcs:
+      children:
+        all_ios_routers:
+          children:
+            nj_ios_routers:
+            ny_ios_routers:
+
+        all_nexus_switches:
+          children:
+            ny_nexus_switches:
+            nj_nexus_switches:
+
+        all_ios_switches:
+          children:
+            nj_ios_switches:
+            ny_ios_switches:
+
+        all_asa_firewalls:
+          children:
+            nj_asa_firewalls:
+            ny_asa_firewalls:
+
+        all_load_balancers:
+          children:
+            ny_load_balancers:
+            nj_load_balancers:
+
+        all_ios_devices:
+          children:
+            all_ios_routers:
+            all_ios_switches:

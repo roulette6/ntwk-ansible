@@ -1,0 +1,5 @@
+.DS_Store
+output/temp_cli_output/*
+vault_key
+playbook_temp_*
+backups/f5_backups/*

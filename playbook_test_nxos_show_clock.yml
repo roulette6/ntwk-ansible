@@ -1,0 +1,20 @@
+---
+# Show the clock
+# Run via: ansible-playbook playbook_test_nxos_show_clock.yml --vault-id prod@vault_key
+# Check out https://docs.ansible.com/ansible/latest/network/user_guide/network_best_practices_2.5.html
+
+- name: NX-OS show clock
+  hosts: "ny-cor-sw01.example.com"
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: "TASK 1: run command show clock"
+      nxos_command:
+        commands:
+          - show clock
+      # delegate_to: netops01-ny1.example.com
+      register: cli_result
+
+    - name: "TASK 2: write output to stdout"
+      debug: var=cli_result.stdout
